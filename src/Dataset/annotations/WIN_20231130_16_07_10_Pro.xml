@@ -1,0 +1,26 @@
+<annotation>
+	<folder>Images</folder>
+	<filename>WIN_20231130_16_07_10_Pro.jpg</filename>
+	<path>C:\Users\CodeZ\IdeaProjects\Testcase03\src\Dataset\Images\WIN_20231130_16_07_10_Pro.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1280</width>
+		<height>720</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>"I" Sign language</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>1035</xmin>
+			<ymin>178</ymin>
+			<xmax>1216</xmax>
+			<ymax>424</ymax>
+		</bndbox>
+	</object>
+</annotation>
