@@ -2,7 +2,7 @@ About My Project: Sign Language Recognition with Object Detection
 -------------
 Introduction
 -------------
-This project is centered around sign language recognition using object detection. It integrates various technologies to create a system that can recognize sign language through a camera feed. The main components include:
+This project is centered around sign language recognition using object detection. It integrates various technologies to create a system that can recognize sign language through a camera feed, then sending a tts in a discord channel. The main components include:
 
 - OpenCV: Utilized for capturing video frames from a camera.
 - DeepLearning4J (DL4J): An open-source, distributed deep learning library used for the core detection algorithms.
