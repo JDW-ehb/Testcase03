@@ -52,5 +52,7 @@ Developing and integrating a Discord bot into an application.
 
 helpfull sources i used for this project: 
 https://github.com/tahaemara/yolo-custom-object-detector/tree/master/java
+
 https://www.youtube.com/watch?v=fjynQ9P2C08&t=389s
+
 https://www.youtube.com/watch?v=NxOxcgbikJo
