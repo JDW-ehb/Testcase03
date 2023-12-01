@@ -9,7 +9,9 @@ import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 
 import org.slf4j.LoggerFactory;
 import java.io.File;
-import org.opencv.core.Mat;
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.Point;
+import org.bytedeco.opencv.opencv_core.Scalar;
 import org.opencv.core.Core;
 import org.deeplearning4j.nn.layers.objdetect.Yolo2OutputLayer;
 import org.deeplearning4j.nn.layers.objdetect.YoloUtils;
@@ -21,6 +23,10 @@ import java.util.List;
 
 import static org.bytedeco.opencv.global.opencv_imgproc.putText;
 import static org.bytedeco.opencv.global.opencv_imgproc.rectangle;
+
+import org.opencv.imgproc.Imgproc;
+
+
 
 
 public class YoloModel {
@@ -68,8 +74,8 @@ public class YoloModel {
             int y1 = (int) Math.round(IMAGE_INPUT_H * xy1[1] / GRID_H);
             int x2 = (int) Math.round(IMAGE_INPUT_W * xy2[0] / GRID_W);
             int y2 = (int) Math.round(IMAGE_INPUT_H * xy2[1] / GRID_H);
-            rectangle(image, new opencv_core.Point(x1, y1), new opencv_core.Point(x2, y2), opencv_core.Scalar.RED);
-            putText(image, CLASSES[predictedClass], new opencv_core.Point(x1 + 2, y2 - 2), 1, .8, opencv_core.Scalar.RED);
+            rectangle(image, new Point(x1, y1), new Point(x2, y2), Scalar.RED);
+            putText(image, CLASSES[predictedClass], new Point(x1 + 2, y2 - 2), 1, .8, Scalar.RED);
 
         }
     }
@@ -96,7 +102,7 @@ public class YoloModel {
         INDArray results = NETWORK.outputSingle(inputimage);
         List<DetectedObject> objs = yout.getPredictedObjects(results, detectionthreshold);
         List<DetectedObject> objects = NonMaxSuppression.getObjects(objs);
-        putText(outputimage, "Hit any key in your keyboard to test the next image..", new opencv_core.Point(10, 25), 1,.9, opencv_core.Scalar.BLACK);
+        putText(outputimage, "Hit any key in your keyboard to test the next image..", new Point(10, 25), 1, .9, Scalar.BLACK);
         drawBoxes(outputimage, objects);//use objs to see the use of the NonMax Suppression algorithm
     }
 

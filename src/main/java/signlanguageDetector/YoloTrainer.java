@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Random;
-import org.datavec.api.io.filters.RandomPathFilter;
 import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,12 +48,10 @@ import org.deeplearning4j.nn.weights.WeightInit;
 
 
 
+
 // from here is death for I am the end of things
 
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 
 
@@ -62,25 +59,22 @@ import java.net.URISyntaxException;
 
 
 public class YoloTrainer {
-
     private static final Logger log = LoggerFactory.getLogger(YoloTrainer.class);
 
-    //  640 x 480 webcam resolution
-
-    private static final int INPUT_WIDTH =  640;
-    private static final int INPUT_HEIGHT = 480;
+    private static final int INPUT_WIDTH = 416;
+    private static final int INPUT_HEIGHT = 416;
     private static final int CHANNELS = 3;
 
     private static final int GRID_WIDTH = 13;
     private static final int GRID_HEIGHT = 13;
     private static final int CLASSES_NUMBER = 1;
     private static final int BOXES_NUMBER = 5;
-    private static final double[][] PRIOR_BOXES = {{1.5, 1.5}, {2, 2}, {3,3}, {3.5, 8}, {4, 9}};//anchors boxes
+    private static final double[][] PRIOR_BOXES = {{1.5, 1.5}, {2, 2}, {3, 3}, {3.5, 8}, {4, 9}};
 
     private static final int BATCH_SIZE = 4;
     private static final int EPOCHS = 50;
     private static final double LEARNIGN_RATE = 0.0001;
-    private static final int SEED = 1234;
+    private static final int SEED = 7854;
 
     /*parent Dataset folder "DATA_DIR" contains two subfolder "images" and "annotations" */
     private static final String DATA_DIR = "C:\\Users\\CodeZ\\IdeaProjects\\Testcase03\\src\\Dataset";
@@ -90,9 +84,22 @@ public class YoloTrainer {
     private static final double LAMDBA_COORD = 1.0;
     private static final double LAMDBA_NO_OBJECT = 0.5;
 
-
     public static void main(String[] args) throws IOException, InterruptedException {
 
+        Random rng = new Random(SEED);
+
+        //Initialize the user interface backend, it is just as tensorboard.
+        //it starts at http://localhost:9000
+        UIServer uiServer = UIServer.getInstance();
+
+        //Configure where the network information (gradients, score vs. time etc) is to be stored. Here: store in memory.
+        StatsStorage statsStorage = new InMemoryStatsStorage();
+
+        //Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
+        uiServer.attach(statsStorage);
+        File imageDir = new File(DATA_DIR, "images");
+
+        log.info("Load data...");
         RandomPathFilter pathFilter = new RandomPathFilter(rng) {
             @Override
             protected boolean accept(String name) {
@@ -106,7 +113,7 @@ public class YoloTrainer {
             }
         };
 
-        InputSplit[] data = new FileSplit(imageDir, NativeImageLoader.ALLOWED_FORMATS, rng).sample(pathFilter, .8, 0.2);
+        InputSplit[] data = new FileSplit(imageDir, NativeImageLoader.ALLOWED_FORMATS, rng).sample(pathFilter, 0.9, 0.1);
         InputSplit trainData = data[0];
         InputSplit testData = data[1];
 
@@ -123,6 +130,86 @@ public class YoloTrainer {
 
         RecordReaderDataSetIterator test = new RecordReaderDataSetIterator(recordReaderTest, 1, 1, 1, true);
         test.setPreProcessor(new ImagePreProcessingScaler(0, 1));
-    }
 
+        ComputationGraph pretrained = (ComputationGraph) TinyYOLO.builder().build().initPretrained();
+
+        INDArray priors = Nd4j.create(PRIOR_BOXES);
+        FineTuneConfiguration fineTuneConf = new FineTuneConfiguration.Builder()
+                .seed(SEED)
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
+                .gradientNormalizationThreshold(1.0)
+                .updater(new RmsProp(LEARNIGN_RATE))
+                .activation(Activation.IDENTITY).miniBatch(true)
+                .trainingWorkspaceMode(WorkspaceMode.ENABLED)
+                .build();
+
+
+
+        ComputationGraph model = new TransferLearning.GraphBuilder(pretrained)
+                .fineTuneConfiguration(fineTuneConf)
+                .setInputTypes(InputType.convolutional(INPUT_HEIGHT, INPUT_WIDTH, CHANNELS))
+                .removeVertexKeepConnections("conv2d_9")
+                .addLayer("convolution2d_9",
+                        new ConvolutionLayer.Builder(1, 1)
+                                .nIn(1024)
+                                .nOut(BOXES_NUMBER * (5 + CLASSES_NUMBER))
+                                .stride(1, 1)
+                                .convolutionMode(ConvolutionMode.Same)
+                                .weightInit(WeightInit.UNIFORM)
+                                .hasBias(false)
+                                .activation(Activation.IDENTITY)
+                                .build(), "leaky_re_lu_8")
+                .addLayer("custom_outputs",
+                        new Yolo2OutputLayer.Builder()
+                                .lambdaNoObj(LAMDBA_NO_OBJECT)
+                                .lambdaCoord(LAMDBA_COORD)
+                                .boundingBoxPriors(priors)
+                                .build(), "convolution2d_9")
+                .setOutputs("custom_outputs")
+                .build();
+
+
+        log.info("\n Model Summary \n" + model.summary());
+
+        log.info("Train model...");
+        //model.setListeners(new ScoreIterationListener(1));//print score after each iteration on stout
+        model.setListeners(new StatsListener(statsStorage));// visit http://localhost:9000 to track the training process
+        for (int i = 0; i < EPOCHS; i++) {
+            train.reset();
+            while (train.hasNext()) {
+                model.fit(train.next());
+            }
+            log.info("*** Completed epoch {} ***", i);
+        }
+
+        log.info("*** Saving Model ***");
+        ModelSerializer.writeModel(model, "model.data", true);
+        log.info("*** Training Done ***");
+
+
+        //visualize results on the test set, Just hit any key in your keyboard to iterate the test set.
+        log.info("*** Visualizing model on test data ***");
+        YoloModel detector = new YoloModel();
+        CanvasFrame mainframe = new CanvasFrame("Sign Language");
+        mainframe.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+        mainframe.setCanvasSize(600, 600);
+        mainframe.setLocationRelativeTo(null);
+        mainframe.setVisible(true);
+
+        OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat();
+        test.setCollectMetaData(true);
+        while (test.hasNext() && mainframe.isVisible()) {
+            org.nd4j.linalg.dataset.DataSet ds = test.next();
+            RecordMetaDataImageURI metadata = (RecordMetaDataImageURI) ds.getExampleMetaData().get(0);
+            Mat image = opencv_imgcodecs.imread(metadata.getURI().getPath().substring(1));
+            //System.out.println("Path: " +metadata.getURI().getPath());
+            detector.detectSignlanguage(ds.getFeatures(), image, 0.4);
+            mainframe.setTitle(new File(metadata.getURI()).getName());
+            mainframe.showImage(converter.convert(image));
+            mainframe.waitKey();
+        }
+        mainframe.dispose();
+        System.exit(0);
+    }
 }

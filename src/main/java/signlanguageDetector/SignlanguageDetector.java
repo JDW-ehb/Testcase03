@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SignlanguageDetector {
-
+/*
 
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(SignlanguageDetector.class);
@@ -74,5 +74,5 @@ public class SignlanguageDetector {
         }
     }
 
-
+*/
 }
