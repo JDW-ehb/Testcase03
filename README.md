@@ -13,7 +13,7 @@ This project is centered around sign language recognition using object detection
 Despite the innovative approach, the project faced significant challenges, particularly with unsupported libraries and Maven dependencies, leading to extensive debugging efforts.
 
 ------------------------------------------
-Interesting Discussion About the Libraries
+Interesting Discussion About the Classes
 - Sign Language Detector
    - Utilizes continuous video capture from a webcam.
    - Employs the YOLO model for detecting sign language in video frames.
@@ -31,12 +31,6 @@ Interesting Discussion About the Libraries
  - YoloModel
    - A specialized model for detecting sign language using the YOLO algorithm.
 
- - Showcase
-   - LabelImg: Demonstrating the annotation of images for training.
-
-- YoloTrainer: A brief overview of how the model is trained.
-
-- Discord Bot: Showcasing the bot logging into a server. Note: The TTS works in JVM, but there are issues with audio transmission to the bot.
 
 --------------------------
 Technology Recommendations
