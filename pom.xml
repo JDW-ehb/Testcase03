@@ -17,28 +17,6 @@
     <dependencies>
 
 
-        <!--<dependency>
-            from here you have the dlj libs
-
-
-        <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-core</artifactId>
-            <version>${dl4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-zoo</artifactId>
-            <version>${dl4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-ui_2.10</artifactId>
-            <version>${dl4j.version}</version>
-        </dependency>
-
-         </dependency>
-        -->
 
         <dependency>
             <groupId>org.deeplearning4j</groupId>
@@ -57,22 +35,6 @@
             <artifactId>deeplearning4j-ui</artifactId>
             <version>1.0.0-M2.1</version>
         </dependency>
-
-        <!--
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>opencv-platform</artifactId>
-            <version>LATEST</version>
-        </dependency>
-
-
-
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>opencv</artifactId>
-            <version>4.7.0-1.5.9</version>
-        </dependency>
-        -->
 
 
 
